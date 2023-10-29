@@ -766,10 +766,7 @@ function generateExcelXML(data, headers, motivoColumnIndex) {
         rowData.forEach((value, columnIndex) => {
             if (columnIndex === motivoColumnIndex) {
                 // Verifique se a célula é da coluna "Motivo" e adicione o motivo selecionado
-                const motivosSelecionados = value.split(','); // Se os motivos estiverem separados por vírgula
-                motivosSelecionados.forEach(otivo => {
-                    xml += `<ss:Cell><ss:Data ss:Type="String">${Motivo.trim()}</ss:Data></ss:Cell>`;
-                });
+                xml += `<ss:Cell><ss:Data ss:Type="String">${value}</ss:Data></ss:Cell>`;
             } else {
                 xml += `<ss:Cell><ss:Data ss:Type="String">${value}</ss:Data></ss:Cell>`;
             }
@@ -783,7 +780,6 @@ function generateExcelXML(data, headers, motivoColumnIndex) {
 
     return xml;
 }
-
 
         function createPieChart(data) {
             // Extraia os dados relevantes do CSV e calcule a porcentagem de cotações por cliente
