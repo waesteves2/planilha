@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <title>Sistema de Cotações</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="https://cdn3.iconfinder.com/data/icons/document-icons-2/30/647714-excel-512.png" type="image/x-icon">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.6/xlsx.full.min.js"></script>
+
+
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+
+        }
+
+
+
+        .container {
+            overflow-wrap: auto;
+            max-width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            color: #000;
+        }
+
+        .import-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .custom-file-upload {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            color: #666;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background-color: white;
+            transition: background-color 0.3s, border-color 0.3s;
+            margin: 10px 0;
+        }
+
+        .custom-file-upload:hover {
+            background-color: #218838;
+        }
+
+        .custom-file-upload input[type="file"] {
+            display: none;
+        }
+
+        .icon-container {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            display: inline-block;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .icon-container img {
+            display: block;
+            margin: 0 auto;
+            width: 100px;
+            height: 100px;
+        }
+
+        .import-container p {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: white;
+        }
+
+        .import-container p span {
+            color: #28a745;
+        }
+
+        ul.nav-tabs {
+            cursor: pointer;
+        }
+
+        ul.nav-tabs li.nav-item a.nav-link {
+            color: #28a745;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            font-size: small;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        input#searchInput {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .table-info {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+
+        }
+
+        .table-info tbody+tbody,
+        .table-info td,
+        .table-info th,
+        .table-info thead th {
+            border-color: #28a745;
+        }
+
+        .action-button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            margin-right: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .action-button:hover {
+            background-color: #218838;
+        }
+
+        .action-button.save-button {
+            background-color: #28a745;
+        }
+
+        .action-button.save-button:hover {
+            background-color: #28a745;
+        }
+
+        .action-button.whatsapp-button {
+            background-color: #25d366;
+        }
+
+        .action-button.whatsapp-button:hover {
+            background-color: #28a745;
+        }
+
+        li {
+            color: black;
+            list-style: none;
+            margin: 5px;
+            padding: 2px;
+            font-size: 15px;
+
+        }
+
+        a {
+
+            text-decoration: none;
+            color: #000;
+
+        }
+
+        #myTabs {
+            text-align: center;
+        }
+    </style>
+
+    <style>
+        /* Adicione estilos para o container do gráfico */
+        .chart-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            height: 400px;
+            margin-top: -485px;
+            margin-left: 1400px;
+            padding: 20px;
+        }
+
+        /* Estilize o gráfico como desejado */
+    </style>
+</head>
+
+<div class="modal fade" id="protocoloModal" tabindex="-1" role="dialog" aria-labelledby="protocoloModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="protocoloModalLabel">Detalhes do Protocolo</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div id="protocoloInfo"></div>
+                <div class="form-group">
+                    <label for="porcentagemInput">Porcentagem:</label>
+                    <input type="text" id="porcentagemInput" class="form-control" value="0"
+                        placeholder="Digite a porcentagem">
+                    <br>
+                    <input type="text" id="valorInput" class="form-control" value="200" placeholder="Digite o valor">
+                </div>
+
+                <div class="form-group">
+                    <label for="novoValor">Novo Valor:</label>
+                    <div id="novoValor" class="form-control"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<body>
+    <div class="container">
+        <div class="import-container">
+            <label class="custom-file-upload import-button">
+                <input type="file" id="fileInput" accept=".csv" onchange="handleFile(this.files)"
+                    style="display: none;">
+                <div class="icon-container">
+                    <img src="https://4.bp.blogspot.com/-5kYsfYmP5js/W44lVdGXJpI/AAAAAAAACDE/PloN5HjMKAcXFcT6nhTXh9yftt_ibhPXACLcBGAs/s1600/microsoft-excel-512.png"
+                        alt="Ícone" width="100" height="100">
+                </div>
+                <p>Importar Arquivo Excel<span></span></p>
+            </label>
+        </div>
+
+        <input type="text" id="searchInput" placeholder="Pesquisar...">
+
+        <ul class="nav nav-tabs" id="myTabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#todas">Todas</a>
+                <a href="#" onclick="exportToExcel('todas', 'Todas')">
+                    <img src="./icon-excel.png" alt="Exportar para Excel" width="70">
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#negociadas">Negociadas</a>
+                <a href="#" onclick="exportToExcel('negociadas', 'Negociadas')">
+                    <img src="./icon-excel.png" alt="Exportar para Excel" width="70">
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#nao-negociadas">Não Negociadas</a>
+                <a href="#" onclick="exportToExcel('nao-negociadas', 'Não Negociadas')">
+                    <img src="./icon-excel.png" alt="Exportar para Excel" width="70">
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#peterson">Peterson</a>
+                <a href="#" onclick="exportToExcel('peterson', 'Peterson')">
+                    <img src="./icon-excel.png" alt="Exportar para Excel" width="70">
+                </a>
+            </li>
+
+
+            <div id="grafico" class="tab-pane">
+                <a class="nav-link" data-toggle="tab" href="#grafico"></a>
+                <div class="chart-container"> <!-- Adicione a classe chart-container aqui -->
+                    <canvas id="clienteChart" width="400"></canvas>
+                </div>
+            </div>
+
+
+        </ul>
+        <div class="tab-content">
+            <div id="todas" class="tab-pane active">
+                <div id="csvDataTodas" class="table-info">
+                </div>
+            </div>
+            <div id="negociadas" class="tab-pane">
+                <div id="csvDataNegociadas" class="table-info">
+                </div>
+            </div>
+            <div id="nao-negociadas" class="tab-pane">
+                <div id="csvDataNaoNegociadas" class="table-info">
+                </div>
+            </div>
+            <div id="peterson" class="tab-pane">
+                <div id="csvDataPeterson" class="table-info">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        // Defina a variável 'headers' com os nomes das colunas
+        const headers = ["Protocolo", "Sistema", "Cotado em", "CNPJ/CPF Remetente", "Remetente", "Cidade de Destino", "CNPJ/CPF Destinatário", "Destinatário", "Nome do Contato", "Telefone do Contato", "Observações", "Total Documentos (Cotação)", "Total Volumes (Cotação)", "Peso Base (Cotação)", "% Diferença sobre a padrão", "Situação", "CTRC", "Valor", "Motivo"];
+
+        let relevantData = [];
+        let negociadasData = [];
+        let naoNegociadasData = [];
+
+        const expiredCotations = []; // Array para armazenar as cotações expiradas
+
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const content = e.target.result;
+                parseCSVData(content);
+            };
+
+            reader.readAsText(file);
+        }
+
+        function parseCSVData(content) {
+            Papa.parse(content, {
+                header: true,
+                dynamicTyping: true,
+                complete: function (results) {
+                    const relevantFields = ["Protocolo", "Sistema", "Cotado em", "CNPJ/CPF Remetente", "Remetente", "Cidade de Destino", "CNPJ/CPF Destinatário", "Destinatário", "Nome do Contato", "Telefone do Contato", "Observações", "Total Documentos (Cotação)", "Total Volumes (Cotação)", "Peso Base (Cotação)", "% Diferença sobre a padrão", "Situação", "CTRC", "Valor", "Motivo"];
+                    relevantData = results.data.map(row => {
+                        const rowData = {};
+                        relevantFields.forEach(field => {
+                            rowData[field] = row[field];
+                        });
+                        rowData["Motivo"] = "Motivo Padrão";
+
+                        return rowData;
+                    });
+
+                    ordenarPorProtocolo(relevantData);
+                    negociadasData = relevantData.filter(row => row["Situação"] === "NEGOCIADA");
+                    naoNegociadasData = relevantData.filter(row => row["Situação"] === "NAO NEGOCIADA");
+
+                    displayCSVData(relevantData, negociadasData, naoNegociadasData);
+
+                    // Chame a função para criar o gráfico de pizza com base nos dados do arquivo
+                    createPieChart(relevantData);
+
+                    setInterval(checkExpiredCotations, 10 * 60 * 1000);
+                    checkExpiredCotations();
+                }
+            });
+        }
+
+
+        function checkExpiredCotations() {
+            const duasDiasMilisegundos = 2 * 24 * 60 * 60 * 1000; // 2 dias em milissegundos
+            const hoje = new Date().getTime();
+
+            const naoNegociadasTable = document.getElementById('csvDataNaoNegociadas');
+            const rows = naoNegociadasTable.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 0) {
+                    const cotadoEmCell = cells[headers.indexOf('Cotado em')];
+                    const protocoloCell = cells[headers.indexOf('Protocolo')];
+                    const nomeContatoCell = cells[headers.indexOf('Nome do Contato')];
+                    const telefoneContatoCell = cells[headers.indexOf('Telefone do Contato')];
+
+                    if (cotadoEmCell && protocoloCell && nomeContatoCell && telefoneContatoCell) {
+                        const cotadoEmText = cotadoEmCell.textContent;
+                        const protocolo = protocoloCell.textContent;
+                        const nomeContato = nomeContatoCell.textContent;
+                        const telefoneContato = telefoneContatoCell.textContent;
+
+                        const dataHoraCotacao = parseDataHora(cotadoEmText);
+
+                        if (dataHoraCotacao) {
+                            const diferencaTempo = hoje - dataHoraCotacao;
+
+                            if (diferencaTempo > duasDiasMilisegundos) {
+                                expiredCotations.push({ protocolo, nomeContato, telefoneContato });
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (expiredCotations.length > 0) {
+                const cotacaoExpirada = expiredCotations.shift();
+                const { protocolo, nomeContato, telefoneContato } = cotacaoExpirada;
+
+                if (telefoneContato) {
+                    const mensagem = `A cotação com Protocolo ${protocolo} está atrasada mais de 2 dias. Contato: ${nomeContato}, Telefone: ${telefoneContato}`;
+                    alert(mensagem);
+
+                    document.addEventListener('click', function (e) {
+                        if (e.target.textContent === telefoneContato) {
+                            window.open(`https://api.whatsapp.com/send?phone=${telefoneContato}&text=Protocolo%20${protocolo}`);
+                        }
+                    });
+                } else {
+                    alert(`Número de telefone inválido para a cotação com Protocolo ${protocolo}`);
+                }
+            }
+        }
+
+
+        function parseDataHora(dataHoraText) {
+            const regex = /(\d{2}\/\d{2}\/\d{4}) - (\d{2}:\d{2})/;
+            const match = dataHoraText.match(regex);
+
+            if (match) {
+                const dataPartes = match[1].split('/');
+                const horaPartes = match[2].split(':');
+
+                if (dataPartes.length === 3 && horaPartes.length === 2) {
+                    const ano = parseInt(dataPartes[2], 10);
+                    const mes = parseInt(dataPartes[1], 10) - 1;
+                    const dia = parseInt(dataPartes[0], 10);
+                    const hora = parseInt(horaPartes[0], 10);
+                    const minuto = parseInt(horaPartes[1], 10);
+
+                    return new Date(ano, mes, dia, hora, minuto).getTime();
+                }
+            }
+
+            return null;
+        }
+
+
+        function displayCSVData(allData, negociadasData, naoNegociadasData) {
+            function createTable(headers, table, isEditable) {
+                const headerRow = table.insertRow();
+
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.innerHTML = header;
+                    headerRow.appendChild(th);
+                });
+
+                if (isEditable) {
+                    const editHeader = document.createElement('th');
+                    editHeader.innerHTML = "Ações";
+                    headerRow.appendChild(editHeader);
+                }
+            }
+
+            const csvDataTodas = document.getElementById('csvDataTodas');
+            const csvDataNegociadas = document.getElementById('csvDataNegociadas');
+            const csvDataNaoNegociadas = document.getElementById('csvDataNaoNegociadas');
+            const csvDataPeterson = document.getElementById('csvDataPeterson');
+
+            csvDataTodas.innerHTML = '';
+            csvDataNegociadas.innerHTML = '';
+            csvDataNaoNegociadas.innerHTML = '';
+            csvDataPeterson.innerHTML = '';
+
+            const headers = Object.keys(allData[0]);
+
+            const todasTable = document.createElement('table');
+            createTable(headers, todasTable, true);
+            populateTable(allData, todasTable, true);
+            csvDataTodas.appendChild(todasTable);
+
+            if (negociadasData.length > 0) {
+                const negociadasTable = document.createElement('table');
+                createTable(headers, negociadasTable, true);
+                populateTable(negociadasData, negociadasTable, true);
+                csvDataNegociadas.appendChild(negociadasTable);
+            }
+
+            if (naoNegociadasData.length > 0) {
+                const naoNegociadasTable = document.createElement('table');
+                createTable(headers, naoNegociadasTable, true);
+                populateTable(naoNegociadasData, naoNegociadasTable, true);
+                csvDataNaoNegociadas.appendChild(naoNegociadasTable);
+            }
+
+            const petersonData = allData.filter(row => row["CNPJ/CPF Remetente"] === "08.254.654/0001-53");
+            if (petersonData.length > 0) {
+                const petersonTable = document.createElement('table');
+                createTable(headers, petersonTable, true);
+                populateTable(petersonData, petersonTable, true);
+                csvDataPeterson.appendChild(petersonTable);
+            }
+        }
+
+        function populateTable(data, table) {
+    const headers = Object.keys(data[0]);
+
+    data.forEach(rowData => {
+        const row = table.insertRow();
+        const id = rowData["Protocolo"];
+        const cnpj = rowData["CNPJ/CPF Remetente"];
+        let motivo;
+
+        if (cnpj === "08.254.654/0001-53") {
+            motivo = "Cotação API";
+        } else {
+            motivo = "";
+        }
+
+        headers.forEach(header => {
+            const cell = row.insertCell();
+
+            if (header === "Protocolo") {
+                const protocoloLink = document.createElement("a");
+                protocoloLink.href = "javascript:void(0)";
+                protocoloLink.textContent = rowData[header];
+
+                protocoloLink.addEventListener("click", function () {
+                    displayProtocoloInfo(rowData);
+                });
+
+                cell.appendChild(protocoloLink);
+            } else if (header === "Telefone do Contato") {
+                const phoneNumber = rowData[header];
+                const protocolo = rowData["Protocolo"];
+                const whatsappLink = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=Protocolo%20${protocolo}`;
+
+                const whatsappIcon = document.createElement("img");
+                whatsappIcon.src = "https://static.vecteezy.com/system/resources/previews/018/819/299/non_2x/whatsapp-icon-transparent-free-png.png";
+                whatsappIcon.width = 30;
+                whatsappIcon.height = 30;
+                whatsappIcon.style.marginRight = "5px";
+
+                const whatsappAnchor = document.createElement("a");
+                whatsappAnchor.href = whatsappLink;
+                whatsappAnchor.target = "_blank";
+                whatsappAnchor.style.textDecoration = "none";
+                whatsappAnchor.style.color = "green";
+                whatsappAnchor.style.cursor = "pointer";
+
+                whatsappAnchor.appendChild(whatsappIcon);
+                whatsappAnchor.appendChild(document.createTextNode(phoneNumber));
+
+                cell.appendChild(whatsappAnchor);
+            } else if (header === "Motivo") {
+                const motivoSelect = document.createElement("select");
+                const motivoOptions = ["Motivo Padrão", "Outra Transp + Barato", "Mercadoria em Produção", "Cotação API", "Outro Motivo"];
+                motivoOptions.forEach(optionText => {
+                    const option = document.createElement("option");
+                    option.value = optionText;
+                    option.text = optionText;
+                    motivoSelect.appendChild(option);
+                });
+                motivoSelect.value = motivo;
+                motivoSelect.addEventListener("change", function () {
+                    saveMotivo(id, motivoSelect.value);
+                });
+                cell.appendChild(motivoSelect);
+            } else if (header === "Nome do Contato" || header === "Observações" || header === "Situação") {
+                const editableCell = document.createElement("div");
+                editableCell.contentEditable = "true";
+                editableCell.innerText = rowData[header];
+                cell.appendChild(editableCell);
+            } else if (header === "Sistema") {
+                cell.innerHTML = rowData[header] || "PORTAL";
+            } else {
+                cell.innerHTML = rowData[header];
+            }
+        });
+
+        const saveCell = row.insertCell();
+        const saveButton = document.createElement("button");
+        saveButton.innerText = "Salvar";
+        saveButton.addEventListener("click", function () {
+            saveRow(id);
+        });
+        saveCell.appendChild(saveButton);
+    });
+}
+
+
+
+        function displayProtocoloInfo(rowData) {
+            const modalTitle = document.getElementById('protocoloModalLabel');
+            const protocoloInfo = document.getElementById('protocoloInfo');
+
+            modalTitle.innerText = "Detalhes do Protocolo";
+
+            let modalContent = '<ul>';
+            for (const key in rowData) {
+                modalContent += `<li><strong>${key}:</strong> ${rowData[key]}</li>`;
+            }
+            modalContent += '</ul>';
+
+            protocoloInfo.innerHTML = modalContent;
+
+            $('#protocoloModal').modal('show');
+        }
+
+
+
+        function saveRow(id) {
+            alert("Salvar a linha com o ID: " + id);
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            filterCSVData(searchTerm);
+        });
+
+        function filterCSVData(searchTerm) {
+            const todasTable = document.getElementById('csvDataTodas');
+            const negociadasTable = document.getElementById('csvDataNegociadas');
+            const naoNegociadasTable = document.getElementById('csvDataNaoNegociadas');
+
+            const tables = [todasTable, negociadasTable, naoNegociadasTable];
+
+            tables.forEach(table => {
+                const rows = table.querySelectorAll('tr');
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    const cells = row.querySelectorAll('td');
+                    let match = false;
+
+                    cells.forEach(cell => {
+                        const text = cell.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            match = true;
+                        }
+                    });
+
+                    if (match) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function ordenarPorProtocolo(data) {
+            data.sort((a, b) => {
+                const protocoloA = parseInt(a["Protocolo"]);
+                const protocoloB = parseInt(b["Protocolo"]);
+                return protocoloA - protocoloB;
+            });
+        }
+
+
+
+        function calculatePercentageFromValue(newValue, baseValue) {
+    const novoValor = parseFloat(newValue);
+    const valorBase = parseFloat(baseValue);
+
+    if (!isNaN(novoValor) && !isNaN(valorBase) && valorBase !== 0) {
+        // Calcule a diferença entre o novo valor e o valor base
+        const diferenca = valorBase - novoValor;
+
+        // Calcule a porcentagem com base na diferença
+        const porcentagem = ((diferenca / valorBase) * 100).toFixed(2);
+
+        return porcentagem;
+    } else {
+        return "";
+    }
+}
+
+function displayProtocoloInfo(rowData) {
+    const modalTitle = document.getElementById('protocoloModalLabel');
+    const porcentagemInput = document.getElementById('porcentagemInput');
+    const valorInput = document.getElementById('valorInput');
+    const protocoloInfo = document.getElementById('protocoloInfo');
+
+    // Defina o título do modal como "Detalhes do Protocolo"
+    modalTitle.innerText = "Detalhes do Protocolo";
+
+    // Preencha os campos de entrada com os valores da porcentagem e do valor do protocolo
+    porcentagemInput.value = rowData["% Diferença sobre a padrão"];
+    valorInput.value = rowData["Valor"];
+
+    // Crie o conteúdo HTML para exibir outras informações do protocolo
+    let modalContent = '<ul>';
+    for (const key in rowData) {
+        if (key !== "% Diferença sobre a padrão" && key !== "Valor") {
+            modalContent += `<li><strong>${key}:</strong> ${rowData[key]}</li>`;
+        }
+    }
+    modalContent += '</ul>';
+
+    protocoloInfo.innerHTML = modalContent;
+
+    // Adicione ouvintes de evento para o valor
+    valorInput.addEventListener('input', function () {
+        // Obtenha o novo valor
+        let novoValor = this.value;
+
+        // Obtenha o valor base
+        const valorBase = rowData["Valor"];
+
+        // Calcule a porcentagem com base no novo valor e no valor base
+        const porcentagem = calculatePercentageFromValue(novoValor, valorBase);
+
+        // Atualize a porcentagem no objeto rowData para que ela possa ser salva
+        rowData["% Diferença sobre a padrão"] = porcentagem;
+
+        // Atualize o campo de entrada de porcentagem com a nova porcentagem calculada
+        porcentagemInput.value = porcentagem;
+    });
+
+    // Abra o modal
+    $('#protocoloModal').modal('show');
+}
+
+
+
+function exportToExcel(tabId, tabName) {
+    const tabContent = document.getElementById(tabId);
+    const headers = Array.from(tabContent.querySelectorAll('th')).map(header => header.textContent);
+
+    // Encontre o índice da coluna "Motivo"
+    const motivoColumnIndex = headers.indexOf("Motivo");
+
+    const data = [];
+
+    Array.from(tabContent.querySelectorAll('tr')).forEach(row => {
+        const rowData = Array.from(row.querySelectorAll('td')).map(cell => cell.textContent);
+        data.push(rowData);
+    });
+
+    const xmlData = generateExcelXML(data, headers, motivoColumnIndex);
+    const blob = new Blob([xmlData], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+
+    a.href = url;
+    a.download = tabName + '.xls';
+    a.click();
+}
+
+function generateExcelXML(data, headers, motivoColumnIndex) {
+    let xml = '<?xml version="1.0"?>';
+    xml += '<ss:Workbook xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
+    xml += '<ss:Worksheet ss:Name="Dados">';
+    xml += '<ss:Table>';
+
+    xml += '<ss:Row>';
+    headers.forEach((header, columnIndex) => {
+        xml += `<ss:Cell><ss:Data ss:Type="String">${header}</ss:Data></ss:Cell>`;
+    });
+    xml += '</ss:Row>';
+
+    data.forEach(rowData => {
+        xml += '<ss:Row>';
+        rowData.forEach((value, columnIndex) => {
+            if (columnIndex === motivoColumnIndex) {
+                // Verifique se a célula é da coluna "Motivo" e adicione o motivo selecionado
+                const motivosSelecionados = value.split(','); // Se os motivos estiverem separados por vírgula
+                motivosSelecionados.forEach(otivo => {
+                    xml += `<ss:Cell><ss:Data ss:Type="String">${Motivo.trim()}</ss:Data></ss:Cell>`;
+                });
+            } else {
+                xml += `<ss:Cell><ss:Data ss:Type="String">${value}</ss:Data></ss:Cell>`;
+            }
+        });
+        xml += '</ss:Row>';
+    });
+
+    xml += '</ss:Table>';
+    xml += '</ss:Worksheet>';
+    xml += '</ss:Workbook>';
+
+    return xml;
+}
+
+
+        function createPieChart(data) {
+            // Extraia os dados relevantes do CSV e calcule a porcentagem de cotações por cliente
+            const clientData = {};
+
+            data.forEach(row => {
+                const cliente = row["Remetente"];
+                if (!clientData[cliente]) {
+                    clientData[cliente] = 0;
+                }
+                clientData[cliente]++;
+            });
+
+            // Ordenar os clientes por número de cotações (do maior para o menor)
+            const sortedClientData = Object.entries(clientData)
+                .sort((a, b) => b[1] - a[1]);
+
+            const clientNames = sortedClientData.map(entry => entry[0]);
+            const clientQuotes = sortedClientData.map(entry => entry[1]);
+
+            // Crie o gráfico de pizza
+            const ctx = document.getElementById("clienteChart").getContext("2d");
+            const myChart = new Chart(ctx, {
+                type: "pie",
+                data: {
+                    labels: clientNames,
+                    datasets: [{
+                        data: clientQuotes,
+                        backgroundColor: [
+                            "#FF5733",
+                            "#33FF57",
+                            "#5733FF",
+
+                            // Adicione mais cores se necessário
+                        ],
+                    }],
+                },
+            });
+        }
+
+    </script>
+
+
+
+
+</body>
+
+</html>
